@@ -1,10 +1,13 @@
 import os
 import time
+import json
 from luno_python.client import Client
 
-# Replace with your actual API key and secret
-API_KEY = 'm12o71yP5nqf4-LHx-o9tbH_XaC9LCpc49ckhygcAeM'
-API_SECRET = 'm12o71yP5nqf4-LHx-o9tbH_XaC9LCpc49ckhygcAeM'
+# Load API credentials from config.json
+with open('config.json') as config_file:
+    config = json.load(config_file)
+    API_KEY = config['API_KEY']
+    API_SECRET = config['API_SECRET']
 
 if __name__ == '__main__':
     c = Client(api_key_id=API_KEY, api_key_secret=API_SECRET)
