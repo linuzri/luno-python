@@ -163,7 +163,7 @@ def get_fee_info(pair=DEFAULT_PAIR):
         print(f"Error getting fee info: {e}")
     time.sleep(0.5)
 
-def get_funding_address(asset=DEFAULT_PAIR):
+def get_funding_address(asset="XBT"):
     try:
         res = client.get_funding_address(asset)
         table = [[key, value] for key, value in res.items()]
@@ -250,7 +250,7 @@ def main():
             pair = input(f"Enter pair (default: {DEFAULT_PAIR}): ") or DEFAULT_PAIR
             get_fee_info(pair)
         elif choice == '12':
-            asset = input(f"Enter asset (default: {DEFAULT_PAIR}): ") or DEFAULT_PAIR
+            asset = input(f"Enter asset (default: XBT): ") or "XBT"
             get_funding_address(asset)
         elif choice == '13':
             test_api_call()
