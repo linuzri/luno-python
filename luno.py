@@ -1,6 +1,7 @@
 import os
 import json
 import time
+from datetime import datetime, timedelta
 from luno_api_client import LunoAPIClient
 from tabulate import tabulate
 from dotenv import load_dotenv
@@ -16,21 +17,25 @@ with open(config_path, 'r') as f:
     API_SECRET = config.get('luno_api_secret')
 
 # Debug prints to verify API key and secret
-print(f"API_KEY: {API_KEY}")
-print(f"API_SECRET: {API_SECRET}")
+#print(f"API_KEY: {API_KEY}")
+#print(f"API_SECRET: {API_SECRET}")
 
 # Retrieve default account ID from config.json
 DEFAULT_ACCOUNT_ID = config.get('default_account_id')
 
 # Debug print to verify default account ID
-print(f"DEFAULT_ACCOUNT_ID: {DEFAULT_ACCOUNT_ID}")
+#print(f"DEFAULT_ACCOUNT_ID: {DEFAULT_ACCOUNT_ID}")
 
 if not API_KEY or not API_SECRET:
     raise ValueError("LUNO_API_KEY and LUNO_API_SECRET must be set in config.json")
 
 client = LunoAPIClient(API_KEY, API_SECRET)
 
-def get_tickers():
+# Set default pair and timestamp
+DEFAULT_PAIR = "XBTMYR"
+DEFAULT_TIMESTAMP = int(datetime.now().timestamp())
+
+def get_tickers(pair=DEFAULT_PAIR):
     try:
         res = client.get_tickers()
         tickers = res['tickers']
@@ -41,7 +46,7 @@ def get_tickers():
         print(f"Error getting tickers: {e}")
     time.sleep(0.5)
 
-def get_ticker(pair):
+def get_ticker(pair=DEFAULT_PAIR):
     try:
         res = client.get_ticker(pair)
         table = [[key, value] for key, value in res.items()]
@@ -51,7 +56,7 @@ def get_ticker(pair):
         print(f"Error getting ticker: {e}")
     time.sleep(0.5)
 
-def get_order_book(pair):
+def get_order_book(pair=DEFAULT_PAIR):
     try:
         res = client.get_order_book(pair)
         bids = res.get('bids', [])
@@ -63,7 +68,9 @@ def get_order_book(pair):
         print(f"Error getting order book: {e}")
     time.sleep(0.5)
 
-def list_trades(pair, since):
+def list_trades(pair=DEFAULT_PAIR, since=None):
+    if since is None:
+        since = int((datetime.now() - timedelta(hours=24)).timestamp())
     try:
         res = client.list_trades(pair, since)
         trades = res.get('trades', [])
@@ -74,7 +81,7 @@ def list_trades(pair, since):
         print(f"Error listing trades: {e}")
     time.sleep(0.5)
 
-def get_candles(pair, since, duration):
+def get_candles(pair=DEFAULT_PAIR, since=DEFAULT_TIMESTAMP, duration=3600):
     try:
         res = client.get_candles(pair, since, duration)
         candles = res.get('candles', [])
@@ -102,6 +109,8 @@ def list_transactions(account_id=DEFAULT_ACCOUNT_ID):
     try:
         res = client.list_transactions(account_id)
         transactions = res.get('transactions', [])
+        if transactions is None:
+            transactions = []
         table = [[transaction['timestamp'], transaction['balance'], transaction['available'], transaction['description']] for transaction in transactions]
         headers = ["Timestamp", "Balance", "Available", "Description"]
         print(tabulate(table, headers, tablefmt="pretty"))
@@ -124,14 +133,14 @@ def list_orders():
     try:
         res = client.list_orders()
         orders = res.get('orders', [])
-        table = [[order['order_id'], order['pair'], order['type'], order['state'], order['price'], order['volume']] for order in orders]
+        table = [[order['order_id'], order['pair'], order['type'], order['state'], order.get('price', 'N/A'), order.get('volume', 'N/A')] for order in orders]
         headers = ["Order ID", "Pair", "Type", "State", "Price", "Volume"]
         print(tabulate(table, headers, tablefmt="pretty"))
-    except Exception as e:
-        print(f"Error listing orders: {e}")
+    except Exception:
+        pass  # Handle the exception without displaying an error message
     time.sleep(0.5)
 
-def list_user_trades(pair):
+def list_user_trades(pair=DEFAULT_PAIR):
     try:
         res = client.list_user_trades(pair)
         trades = res.get('trades', [])
@@ -142,7 +151,7 @@ def list_user_trades(pair):
         print(f"Error listing user trades: {e}")
     time.sleep(0.5)
 
-def get_fee_info(pair):
+def get_fee_info(pair=DEFAULT_PAIR):
     try:
         res = client.get_fee_info(pair)
         table = [[key, value] for key, value in res.items()]
@@ -152,7 +161,7 @@ def get_fee_info(pair):
         print(f"Error getting fee info: {e}")
     time.sleep(0.5)
 
-def get_funding_address(asset):
+def get_funding_address(asset=DEFAULT_PAIR):
     try:
         res = client.get_funding_address(asset)
         table = [[key, value] for key, value in res.items()]
@@ -207,20 +216,17 @@ def main():
         if choice == '1':
             get_tickers()
         elif choice == '2':
-            pair = input("Enter pair: ")
+            pair = input(f"Enter pair (default: {DEFAULT_PAIR}): ") or DEFAULT_PAIR
             get_ticker(pair)
         elif choice == '3':
-            pair = input("Enter pair: ")
+            pair = input(f"Enter pair (default: {DEFAULT_PAIR}): ") or DEFAULT_PAIR
             get_order_book(pair)
         elif choice == '4':
-            pair = input("Enter pair: ")
-            since = get_valid_timestamp("Enter since timestamp: ")
-            list_trades(pair, since)
+            pair = input(f"Enter pair (default: {DEFAULT_PAIR}): ") or DEFAULT_PAIR
+            list_trades(pair)
         elif choice == '5':
-            pair = input("Enter pair: ")
-            since = get_valid_timestamp("Enter since timestamp: ")
-            duration = get_valid_timestamp("Enter duration: ")
-            get_candles(pair, since, duration)
+            pair = input(f"Enter pair (default: {DEFAULT_PAIR}): ") or DEFAULT_PAIR
+            get_candles(pair)
         elif choice == '6':
             get_balances()
         elif choice == '7':
@@ -232,13 +238,13 @@ def main():
         elif choice == '9':
             list_orders()
         elif choice == '10':
-            pair = input("Enter pair: ")
+            pair = input(f"Enter pair (default: {DEFAULT_PAIR}): ") or DEFAULT_PAIR
             list_user_trades(pair)
         elif choice == '11':
-            pair = input("Enter pair: ")
+            pair = input(f"Enter pair (default: {DEFAULT_PAIR}): ") or DEFAULT_PAIR
             get_fee_info(pair)
         elif choice == '12':
-            asset = input("Enter asset: ")
+            asset = input(f"Enter asset (default: {DEFAULT_PAIR}): ") or DEFAULT_PAIR
             get_funding_address(asset)
         elif choice == '13':
             test_api_call()
