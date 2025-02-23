@@ -19,6 +19,12 @@ with open(config_path, 'r') as f:
 print(f"API_KEY: {API_KEY}")
 print(f"API_SECRET: {API_SECRET}")
 
+# Retrieve default account ID from config.json
+DEFAULT_ACCOUNT_ID = config.get('default_account_id', '7795065872817529892')
+
+# Debug print to verify default account ID
+print(f"DEFAULT_ACCOUNT_ID: {DEFAULT_ACCOUNT_ID}")
+
 if not API_KEY or not API_SECRET:
     raise ValueError("LUNO_API_KEY and LUNO_API_SECRET must be set in config.json")
 
@@ -77,7 +83,7 @@ def get_balances():
     time.sleep(0.5)
     return res
 
-def list_transactions(account_id):
+def list_transactions(account_id=DEFAULT_ACCOUNT_ID):
     try:
         res = client.list_transactions(account_id)
         print(res)
@@ -85,7 +91,7 @@ def list_transactions(account_id):
         print(f"Error listing transactions: {e}")
     time.sleep(0.5)
 
-def list_pending_transactions(account_id):
+def list_pending_transactions(account_id=DEFAULT_ACCOUNT_ID):
     try:
         res = client.list_pending_transactions(account_id)
         print(res)
@@ -187,10 +193,10 @@ def main():
         elif choice == '6':
             get_balances()
         elif choice == '7':
-            account_id = input("Enter account ID: ")
+            account_id = input(f"Enter account ID (default: {DEFAULT_ACCOUNT_ID}): ") or DEFAULT_ACCOUNT_ID
             list_transactions(account_id)
         elif choice == '8':
-            account_id = input("Enter account ID: ")
+            account_id = input(f"Enter account ID (default: {DEFAULT_ACCOUNT_ID}): ") or DEFAULT_ACCOUNT_ID
             list_pending_transactions(account_id)
         elif choice == '9':
             list_orders()
