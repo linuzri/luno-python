@@ -20,7 +20,7 @@ print(f"API_KEY: {API_KEY}")
 print(f"API_SECRET: {API_SECRET}")
 
 # Retrieve default account ID from config.json
-DEFAULT_ACCOUNT_ID = config.get('default_account_id', '7795065872817529892')
+DEFAULT_ACCOUNT_ID = config.get('default_account_id')
 
 # Debug print to verify default account ID
 print(f"DEFAULT_ACCOUNT_ID: {DEFAULT_ACCOUNT_ID}")
