@@ -44,7 +44,9 @@ def get_tickers():
 def get_ticker(pair):
     try:
         res = client.get_ticker(pair)
-        print(res)
+        table = [[key, value] for key, value in res.items()]
+        headers = ["Field", "Value"]
+        print(tabulate(table, headers, tablefmt="pretty"))
     except Exception as e:
         print(f"Error getting ticker: {e}")
     time.sleep(0.5)
@@ -52,7 +54,11 @@ def get_ticker(pair):
 def get_order_book(pair):
     try:
         res = client.get_order_book(pair)
-        print(res)
+        bids = res.get('bids', [])
+        asks = res.get('asks', [])
+        table = [["Bid", bid['price'], bid['volume']] for bid in bids] + [["Ask", ask['price'], ask['volume']] for ask in asks]
+        headers = ["Type", "Price", "Volume"]
+        print(tabulate(table, headers, tablefmt="pretty"))
     except Exception as e:
         print(f"Error getting order book: {e}")
     time.sleep(0.5)
@@ -60,7 +66,10 @@ def get_order_book(pair):
 def list_trades(pair, since):
     try:
         res = client.list_trades(pair, since)
-        print(res)
+        trades = res.get('trades', [])
+        table = [[trade['timestamp'], trade['price'], trade['volume'], trade['is_buy']] for trade in trades]
+        headers = ["Timestamp", "Price", "Volume", "Is Buy"]
+        print(tabulate(table, headers, tablefmt="pretty"))
     except Exception as e:
         print(f"Error listing trades: {e}")
     time.sleep(0.5)
@@ -68,7 +77,10 @@ def list_trades(pair, since):
 def get_candles(pair, since, duration):
     try:
         res = client.get_candles(pair, since, duration)
-        print(res)
+        candles = res.get('candles', [])
+        table = [[candle['timestamp'], candle['open'], candle['close'], candle['high'], candle['low'], candle['volume']] for candle in candles]
+        headers = ["Timestamp", "Open", "Close", "High", "Low", "Volume"]
+        print(tabulate(table, headers, tablefmt="pretty"))
     except Exception as e:
         print(f"Error getting candles: {e}")
     time.sleep(0.5)
@@ -77,7 +89,10 @@ def get_balances():
     res = None  # Initialize res to None
     try:
         res = client.get_balances()
-        print(res)
+        balances = res.get('balance', [])
+        table = [[balance['account_id'], balance['asset'], balance['balance'], balance['reserved'], balance['unconfirmed']] for balance in balances]
+        headers = ["Account ID", "Asset", "Balance", "Reserved", "Unconfirmed"]
+        print(tabulate(table, headers, tablefmt="pretty"))
     except Exception as e:
         print(f"Error getting balances: {e}")
     time.sleep(0.5)
@@ -86,7 +101,10 @@ def get_balances():
 def list_transactions(account_id=DEFAULT_ACCOUNT_ID):
     try:
         res = client.list_transactions(account_id)
-        print(res)
+        transactions = res.get('transactions', [])
+        table = [[transaction['timestamp'], transaction['balance'], transaction['available'], transaction['description']] for transaction in transactions]
+        headers = ["Timestamp", "Balance", "Available", "Description"]
+        print(tabulate(table, headers, tablefmt="pretty"))
     except Exception as e:
         print(f"Error listing transactions: {e}")
     time.sleep(0.5)
@@ -94,7 +112,10 @@ def list_transactions(account_id=DEFAULT_ACCOUNT_ID):
 def list_pending_transactions(account_id=DEFAULT_ACCOUNT_ID):
     try:
         res = client.list_pending_transactions(account_id)
-        print(res)
+        transactions = res.get('transactions', [])
+        table = [[transaction['timestamp'], transaction['balance'], transaction['available'], transaction['description']] for transaction in transactions]
+        headers = ["Timestamp", "Balance", "Available", "Description"]
+        print(tabulate(table, headers, tablefmt="pretty"))
     except Exception as e:
         print(f"Error listing pending transactions: {e}")
     time.sleep(0.5)
@@ -102,7 +123,10 @@ def list_pending_transactions(account_id=DEFAULT_ACCOUNT_ID):
 def list_orders():
     try:
         res = client.list_orders()
-        print(res)
+        orders = res.get('orders', [])
+        table = [[order['order_id'], order['pair'], order['type'], order['state'], order['price'], order['volume']] for order in orders]
+        headers = ["Order ID", "Pair", "Type", "State", "Price", "Volume"]
+        print(tabulate(table, headers, tablefmt="pretty"))
     except Exception as e:
         print(f"Error listing orders: {e}")
     time.sleep(0.5)
@@ -110,7 +134,10 @@ def list_orders():
 def list_user_trades(pair):
     try:
         res = client.list_user_trades(pair)
-        print(res)
+        trades = res.get('trades', [])
+        table = [[trade['timestamp'], trade['price'], trade['volume'], trade['fee_base'], trade['fee_counter']] for trade in trades]
+        headers = ["Timestamp", "Price", "Volume", "Fee Base", "Fee Counter"]
+        print(tabulate(table, headers, tablefmt="pretty"))
     except Exception as e:
         print(f"Error listing user trades: {e}")
     time.sleep(0.5)
@@ -118,7 +145,9 @@ def list_user_trades(pair):
 def get_fee_info(pair):
     try:
         res = client.get_fee_info(pair)
-        print(res)
+        table = [[key, value] for key, value in res.items()]
+        headers = ["Field", "Value"]
+        print(tabulate(table, headers, tablefmt="pretty"))
     except Exception as e:
         print(f"Error getting fee info: {e}")
     time.sleep(0.5)
@@ -126,7 +155,9 @@ def get_fee_info(pair):
 def get_funding_address(asset):
     try:
         res = client.get_funding_address(asset)
-        print(res)
+        table = [[key, value] for key, value in res.items()]
+        headers = ["Field", "Value"]
+        print(tabulate(table, headers, tablefmt="pretty"))
     except Exception as e:
         print(f"Error getting funding address: {e}")
     time.sleep(0.5)
