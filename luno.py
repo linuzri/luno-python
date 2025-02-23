@@ -180,6 +180,75 @@ def test_api_call():
     except Exception as e:
         print(f"API call failed. Error: {e}")
 
+def start_trading(initial_fund):
+    fund = initial_fund
+    bought_price = None
+    total_profit = 0
+    total_loss = 0
+
+    # Execute the first buy immediately
+    try:
+        res = client.get_ticker("XBTMYR")
+        last_trade_price = float(res['last_trade'])
+        buy_price = last_trade_price * 1.006
+        if fund >= buy_price:
+            bought_price = last_trade_price
+            fund -= buy_price
+            print(f"Initial Buy: Bought XBT at {bought_price} MYR, Fund: {fund} MYR")
+    except Exception as e:
+        print(f"Error during initial buy: {e}")
+        return
+
+    while True:
+        try:
+            res = client.get_ticker("XBTMYR")
+            last_trade_price = float(res['last_trade'])
+            print(f"Last trade price: {last_trade_price} MYR")
+
+            if bought_price is not None:
+                # Calculate the sell price including the fee and profit margin
+                target_sell_price = bought_price * 1.01
+                sell_price = target_sell_price * 0.994
+                cut_loss_price = bought_price * 0.98
+
+                if last_trade_price >= sell_price:
+                    fund += sell_price
+                    profit = sell_price - bought_price
+                    total_profit += profit
+                    print(f"Sold XBT at {last_trade_price} MYR, Profit: {profit} MYR, Fund: {fund} MYR")
+                    bought_price = None
+                elif last_trade_price <= cut_loss_price:
+                    fund += last_trade_price * 0.994
+                    loss = bought_price - last_trade_price
+                    total_loss += loss
+                    print(f"Sold XBT at {last_trade_price} MYR to cut losses, Loss: {loss} MYR, Fund: {fund} MYR")
+                    bought_price = None
+
+            if bought_price is None:
+                # Execute the next buy
+                buy_price = last_trade_price * 1.006
+                if fund >= buy_price:
+                    bought_price = last_trade_price
+                    fund -= buy_price
+                    print(f"Bought XBT at {bought_price} MYR, Fund: {fund} MYR")
+
+            print(f"Current Fund: {fund} MYR, Total Profit: {total_profit} MYR, Total Loss: {total_loss} MYR")
+            if total_profit >= initial_fund * 0.10:
+                print("Reached 10% profit margin. Stopping trading.")
+                break
+            if total_loss >= initial_fund * 0.05:
+                print("Reached 5% loss margin. Stopping trading.")
+                break
+
+            print("Press 'q' to quit trading or any other key to continue...")
+            if input().lower() == 'q':
+                break
+
+            time.sleep(30)
+        except Exception as e:
+            print(f"Error during trading: {e}")
+            time.sleep(30)
+
 def menu():
     print("Select an option:")
     print("1. Get Tickers")
@@ -195,6 +264,7 @@ def menu():
     print("11. Get Fee Info")
     print("12. Get Funding Address")
     print("13. Test API Call")
+    print("14. Start Trading")
     print("0. Exit")
     return input("Enter your choice: ")
 
@@ -254,6 +324,9 @@ def main():
             get_funding_address(asset)
         elif choice == '13':
             test_api_call()
+        elif choice == '14':
+            initial_fund = float(input("Enter Initial Fund (MYR): "))
+            start_trading(initial_fund)
         elif choice == '0':
             break
         else:
