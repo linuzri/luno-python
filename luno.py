@@ -194,7 +194,8 @@ def start_trading(initial_fund):
         if fund >= buy_price:
             bought_price = last_trade_price
             fund -= buy_price
-            print(f"Initial Buy: Bought XBT at {bought_price} MYR, Fund: {fund} MYR")
+            btc_bought = buy_price / last_trade_price
+            print(f"Initial Buy: Bought {btc_bought} BTC at {bought_price} MYR, Fund: {fund} MYR")
     except Exception as e:
         print(f"Error during initial buy: {e}")
         return
@@ -230,7 +231,8 @@ def start_trading(initial_fund):
                 if fund >= buy_price:
                     bought_price = last_trade_price
                     fund -= buy_price
-                    print(f"Bought XBT at {bought_price} MYR, Fund: {fund} MYR")
+                    btc_bought = buy_price / last_trade_price
+                    print(f"Bought {btc_bought} BTC at {bought_price} MYR, Fund: {fund} MYR")
 
             print(f"Current Fund: {fund} MYR, Total Profit: {total_profit} MYR, Total Loss: {total_loss} MYR")
             if total_profit >= initial_fund * 0.10:
