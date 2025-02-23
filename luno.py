@@ -74,6 +74,8 @@ def list_trades(pair=DEFAULT_PAIR, since=None):
     try:
         res = client.list_trades(pair, since)
         trades = res.get('trades', [])
+        if trades is None:
+            trades = []
         table = [[trade['timestamp'], trade['price'], trade['volume'], trade['is_buy']] for trade in trades]
         headers = ["Timestamp", "Price", "Volume", "Is Buy"]
         print(tabulate(table, headers, tablefmt="pretty"))
@@ -196,10 +198,13 @@ def menu():
     print("0. Exit")
     return input("Enter your choice: ")
 
-def get_valid_timestamp(prompt):
+def get_valid_timestamp(prompt, default=None):
     while True:
         try:
-            timestamp = int(input(prompt))
+            user_input = input(prompt)
+            if user_input == "" and default is not None:
+                return default
+            timestamp = int(user_input)
             return timestamp
         except ValueError:
             print("Invalid input. Please enter a valid integer timestamp.")
@@ -223,7 +228,8 @@ def main():
             get_order_book(pair)
         elif choice == '4':
             pair = input(f"Enter pair (default: {DEFAULT_PAIR}): ") or DEFAULT_PAIR
-            list_trades(pair)
+            since = get_valid_timestamp("Enter timestamp (default: 1740312918074): ", 1740312918074)
+            list_trades(pair, since)
         elif choice == '5':
             pair = input(f"Enter pair (default: {DEFAULT_PAIR}): ") or DEFAULT_PAIR
             get_candles(pair)
