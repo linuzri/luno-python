@@ -150,6 +150,14 @@ def menu():
     print("0. Exit")
     return input("Enter your choice: ")
 
+def get_valid_timestamp(prompt):
+    while True:
+        try:
+            timestamp = int(input(prompt))
+            return timestamp
+        except ValueError:
+            print("Invalid input. Please enter a valid integer timestamp.")
+
 def main():
     try:
         test_api_call()  # Test the API call to ensure the client is set up correctly
@@ -169,12 +177,12 @@ def main():
             get_order_book(pair)
         elif choice == '4':
             pair = input("Enter pair: ")
-            since = int(input("Enter since timestamp: "))
+            since = get_valid_timestamp("Enter since timestamp: ")
             list_trades(pair, since)
         elif choice == '5':
             pair = input("Enter pair: ")
-            since = int(input("Enter since timestamp: "))
-            duration = int(input("Enter duration: "))
+            since = get_valid_timestamp("Enter since timestamp: ")
+            duration = get_valid_timestamp("Enter duration: ")
             get_candles(pair, since, duration)
         elif choice == '6':
             get_balances()
