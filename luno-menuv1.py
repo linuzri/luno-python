@@ -11,7 +11,7 @@ with open(config_path, 'r') as f:
     API_SECRET = config['luno_api_secret']
 
 if not API_KEY or not API_SECRET:
-    raise ValueError("LUNO_API_KEY and LUNO_API_SECRET must be set in config.json")
+    raise ValueError("API key and secret must be set in config.json")
 
 def get_tickers(client):
     try:
