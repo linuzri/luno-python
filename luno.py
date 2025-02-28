@@ -186,7 +186,7 @@ def start_trading(initial_fund):
     total_profit = 0
     total_loss = 0
 
-    # Execute the first buy immediately
+    # Execute the first buy immediately using the provided fund
     try:
         res = client.get_ticker("XBTMYR")
         last_trade_price = float(res['last_trade'])
@@ -195,7 +195,7 @@ def start_trading(initial_fund):
             bought_price = last_trade_price
             fund -= buy_price
             btc_bought = buy_price / last_trade_price
-            print(f"Initial Buy: Bought {btc_bought} BTC at {bought_price} MYR, Fund: {fund} MYR")
+            print(f"Initial Buy: Used {buy_price} MYR to buy {btc_bought} BTC at {bought_price} MYR, Remaining Fund: {fund} MYR")
     except Exception as e:
         print(f"Error during initial buy: {e}")
         return
@@ -232,7 +232,7 @@ def start_trading(initial_fund):
                     bought_price = last_trade_price
                     fund -= buy_price
                     btc_bought = buy_price / last_trade_price
-                    print(f"Bought {btc_bought} BTC at {bought_price} MYR, Fund: {fund} MYR")
+                    print(f"Bought {btc_bought} BTC at {bought_price} MYR, Used {buy_price} MYR, Remaining Fund: {fund} MYR")
 
             print(f"Current Fund: {fund} MYR, Total Profit: {total_profit} MYR, Total Loss: {total_loss} MYR")
             if total_profit >= initial_fund * 0.10:
@@ -246,10 +246,10 @@ def start_trading(initial_fund):
             if input().lower() == 'q':
                 break
 
-            time.sleep(30)
+            time.sleep(5)  # Refresh every 5 seconds
         except Exception as e:
             print(f"Error during trading: {e}")
-            time.sleep(30)
+            time.sleep(5)
 
 def menu():
     print("Select an option:")
