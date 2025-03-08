@@ -133,8 +133,8 @@ def show_trading_status():
         if bought_price is not None:
             print(f"Holding: {btc_bought} BTC")
             print(f"Buying Price: {bought_price} MYR")
-            print(f"Average Buying Price: {average_buying_price} MYR")
-            print(f"Taker Fee: {taker_fee * 100}% ({trading_fee_value} MYR)")
+            print(f"Average Buying Price: {average_buying_price:.2f} MYR")
+            print(f"Taker Fee: {taker_fee * 100}% ({trading_fee_value:.2f} MYR)")
         else:
             print("No current holdings.")
         save_account_details()  # Save account details after showing status
@@ -196,9 +196,13 @@ def sell_pair_with_fund():
         print(f"Error during selling: {e}")
 
 def show_profit():
-    global total_profit, total_loss  # Use global variables to access profit and loss
+    global total_profit, total_loss, fund, total_buy_amount, taker_fee, bought_price, btc_bought  # Use global variables to access profit and loss
     try:
-        net_profit = total_profit - total_loss
+        if total_buy_amount == 0 or btc_bought == 0:
+            net_profit = 0
+        else:
+            current_balance = fund + (btc_bought * bought_price if bought_price else 0)
+            net_profit = current_balance - total_buy_amount - (total_buy_amount * taker_fee)
         if net_profit > 0:
             print(colored(f"Net Profit: {net_profit:.2f} MYR", "green", attrs=["bold"]))
         else:
@@ -321,9 +325,8 @@ def menu():
     print(f"2. Live Price (default: {DEFAULT_PAIR})")
     print("3. Add Fund")
     print("4. Buy Assets")
-    print("5. Show Account Details")
-    # print("6. Start Trading")  # Disabled
-    print("6. Sell Pair with Fund")
+    print("5. Sell Assets")
+    print("6. Show Account Details")
     print("7. Show Profit/Loss")
     print("8. Monitor Price")
     print("9. Get Fee Info")
@@ -357,11 +360,9 @@ def main():
         elif choice == '4':
             buy_pair_with_fund()
         elif choice == '5':
-            show_trading_status()
-        # elif choice == '6':
-        #     start_trading_with_initial_fund()  # Disabled
-        elif choice == '6':
             sell_pair_with_fund()
+        elif choice == '6':
+            show_trading_status()
         elif choice == '7':
             show_profit()
         elif choice == '8':
