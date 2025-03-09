@@ -82,6 +82,7 @@ class AdvancedTradingBot:
         self.current_position = 0
         self.entry_price = 0
         self.total_profit = 0
+        self.total_loss = 0  # Added this line
         self.total_trades = 0
         self.winning_trades = 0
         self.trade_history = []
