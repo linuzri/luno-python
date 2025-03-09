@@ -2,6 +2,7 @@ import os
 import json
 import time
 from datetime import datetime
+import logging
 from luno_api_client import LunoAPIClient
 from dotenv import load_dotenv
 from tabulate import tabulate  # Import tabulate
