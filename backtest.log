@@ -1,0 +1,9 @@
+2025-03-09 11:14:08,485 - ERROR - Error collecting historical data: Out of bounds nanosecond timestamp: 46738-11-21 00:00:00
+2025-03-09 11:16:26,924 - ERROR - Data collection error: API call failed: 400 {"error":"One or more arguments are invalid","error_code":"ErrInvalidArguments","field_errors":{"since":"Timestamp is older than 24 hours"}}
+
+2025-03-09 11:18:24,742 - ERROR - Data collection error: API call failed: 400 {"error":"One or more arguments are invalid","error_code":"ErrInvalidArguments","field_errors":{"since":"Timestamp is older than 24 hours"}}
+
+2025-03-09 11:20:23,537 - ERROR - Data collection error: API call failed: 400 {"error":"One or more arguments are invalid","error_code":"ErrInvalidArguments","field_errors":{"since":"Timestamp is older than 24 hours"}}
+
+2025-03-09 11:23:22,459 - ERROR - Data collection error: API call failed: 400 {"error":"One or more arguments are invalid","error_code":"ErrInvalidArguments","field_errors":{"since":"Timestamp is older than 24 hours"}}
+
