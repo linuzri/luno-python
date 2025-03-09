@@ -7,3 +7,29 @@
 
 2025-03-09 11:23:22,459 - ERROR - Data collection error: API call failed: 400 {"error":"One or more arguments are invalid","error_code":"ErrInvalidArguments","field_errors":{"since":"Timestamp is older than 24 hours"}}
 
+2025-03-09 15:01:27,439 - ERROR - Trade data collection error: API call failed: 400 {"error":"One or more arguments are invalid","error_code":"ErrInvalidArguments","field_errors":{"since":"Timestamp is older than 24 hours"}}
+
+2025-03-09 15:11:58,049 - ERROR - Trade data collection error: API call failed: 400 {"error":"One or more arguments are invalid","error_code":"ErrInvalidArguments","field_errors":{"since":"Timestamp is older than 24 hours"}}
+
+2025-03-09 15:14:26,185 - ERROR - Trade data collection error: API call failed: 400 {"error":"One or more arguments are invalid","error_code":"ErrInvalidArguments","field_errors":{"since":"Timestamp is older than 24 hours"}}
+
+2025-03-09 15:18:53,359 - ERROR - Trade data collection error: API call failed: 400 {"error":"One or more arguments are invalid","error_code":"ErrInvalidArguments","field_errors":{"since":"Timestamp is older than 24 hours"}}
+
+2025-03-09 15:18:53,633 - ERROR - Error loading optimal strategy: Expecting value: line 1 column 1 (char 0)
+2025-03-09 15:19:37,815 - ERROR - Trade data collection error: API call failed: 400 {"error":"One or more arguments are invalid","error_code":"ErrInvalidArguments","field_errors":{"since":"Timestamp is older than 24 hours"}}
+
+2025-03-09 15:20:02,706 - ERROR - Trade data collection error: API call failed: 400 {"error":"One or more arguments are invalid","error_code":"ErrInvalidArguments","field_errors":{"since":"Timestamp is older than 24 hours"}}
+
+2025-03-09 15:20:44,308 - ERROR - Trade data collection error: API call failed: 400 {"error":"One or more arguments are invalid","error_code":"ErrInvalidArguments","field_errors":{"since":"Timestamp is older than 24 hours"}}
+
+2025-03-09 15:23:50,052 - ERROR - Trade data collection error: API call failed: 400 {"error":"One or more arguments are invalid","error_code":"ErrInvalidArguments","field_errors":{"since":"Timestamp is older than 24 hours"}}
+
+2025-03-09 15:25:06,360 - ERROR - Trade data collection error: API call failed: 400 {"error":"One or more arguments are invalid","error_code":"ErrInvalidArguments","field_errors":{"since":"Timestamp is older than 24 hours"}}
+
+2025-03-09 15:28:27,090 - ERROR - Trade data collection error: API call failed: 400 {"error":"One or more arguments are invalid","error_code":"ErrInvalidArguments","field_errors":{"since":"Timestamp is older than 24 hours"}}
+
+2025-03-09 15:34:51,307 - ERROR - Trade data collection error: nested renamer is not supported
+2025-03-09 15:38:40,441 - ERROR - Trade data collection error: API call failed: 400 {"error":"One or more arguments are invalid","error_code":"ErrInvalidArguments","field_errors":{"since":"Timestamp is older than 24 hours"}}
+
+2025-03-09 15:39:24,654 - ERROR - Trade data collection error: API call failed: 400 {"error":"One or more arguments are invalid","error_code":"ErrInvalidArguments","field_errors":{"since":"Timestamp is older than 24 hours"}}
+
