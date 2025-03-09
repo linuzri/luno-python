@@ -57,6 +57,25 @@ class TechnicalAnalysis:
         rsi = ma_up / (ma_up + ma_down) * 100
         return rsi.iloc[-1]
 
+class TradeCalculator:
+    def __init__(self):
+        self.total_fees = 0
+        self.total_volume = 0
+    
+    def calculate_fees(self, price, amount, is_maker=False):
+        """Calculate trading fees based on order type"""
+        try:
+            fee_info = client.get_fee_info("XBTMYR")
+            maker_fee = float(fee_info['maker_fee'])
+            taker_fee = float(fee_info['taker_fee'])
+            fee_rate = maker_fee if is_maker else taker_fee
+            fee_amount = price * amount * fee_rate
+            self.total_fees += fee_amount
+            return fee_amount, fee_rate
+        except Exception as e:
+            logging.error(f"Error calculating fees: {e}")
+            return 0, 0
+
 class AdvancedTradingBot:
     def __init__(self):
         self.strategy = TradingStrategy()
@@ -66,6 +85,11 @@ class AdvancedTradingBot:
         self.total_trades = 0
         self.winning_trades = 0
         self.trade_history = []
+        self.calculator = TradeCalculator()
+        self.trades_summary = {
+            'buys': {'volume': 0, 'fees': 0, 'total_cost': 0},
+            'sells': {'volume': 0, 'fees': 0, 'total_revenue': 0}
+        }
         
         # Load trading settings from config
         with open(config_path, 'r') as f:
@@ -102,12 +126,13 @@ class AdvancedTradingBot:
             loss = self.initial_fund - self.current_fund
             print(colored(f"Total Loss: {loss:.2f} MYR (-{(loss/self.initial_fund)*100:.2f}%)", "red"))
 
-    def log_trade(self, action, price, amount, profit=0):
+    def log_trade(self, action, price, amount, fees=0, profit=0):
         trade = {
             'timestamp': datetime.now(),
             'action': action,
             'price': price,
             'amount': amount,
+            'fees': fees,
             'profit': profit
         }
         self.trade_history.append(trade)
@@ -135,56 +160,84 @@ class AdvancedTradingBot:
         
         return ma20 > ma50 and 30 < rsi < 70
 
-    def execute_trade(self, action, price, amount):
+    def execute_trade(self, action, price, amount, is_maker=False):
         try:
+            fee_amount, fee_rate = self.calculator.calculate_fees(price, amount, is_maker)
+            total_amount = price * amount
+
             if action == "BUY":
-                # Calculate position size based on risk management
-                max_position = self.strategy.calculate_position_size(self.current_fund, price)
-                amount = min(amount, max_position)
+                actual_amount = amount * (1 - fee_rate)
+                total_cost = total_amount + fee_amount
                 
-                # Execute buy order
-                print(colored(f"Executing BUY order: {amount} BTC at {price} MYR", "green"))
+                # Update trade summary
+                self.trades_summary['buys']['volume'] += actual_amount
+                self.trades_summary['buys']['fees'] += fee_amount
+                self.trades_summary['buys']['total_cost'] += total_cost
+                
+                print(colored(f"\nBUY Order Details:", "cyan"))
+                print(f"Amount: {amount} BTC")
+                print(f"Price: {price} MYR")
+                print(f"Fee Rate: {fee_rate*100:.3f}%")
+                print(f"Fee Amount: {fee_amount:.2f} MYR")
+                print(f"Total Cost: {total_cost:.2f} MYR")
+                print(f"Actual BTC Received: {actual_amount}")
+                
+                self.current_position = actual_amount
                 self.entry_price = price
-                self.current_position = amount
-                self.log_trade("BUY", price, amount)
                 
             elif action == "SELL":
-                # Execute sell order
-                print(colored(f"Executing SELL order: {amount} BTC at {price} MYR", "red"))
-                profit = (price - self.entry_price) * amount
-                self.total_profit += profit
-                self.total_trades += 1
+                actual_amount = amount * (1 - fee_rate)
+                total_revenue = total_amount - fee_amount
                 
-                if profit > 0:
-                    self.winning_trades += 1
-                    print(colored(f"Profit: {profit:.2f} MYR", "green"))
-                else:
-                    print(colored(f"Loss: {abs(profit):.2f} MYR", "red"))
+                # Calculate real profit/loss including fees
+                total_cost_basis = (amount / self.trades_summary['buys']['volume']) * self.trades_summary['buys']['total_cost']
+                net_profit = total_revenue - total_cost_basis
+                
+                # Update trade summary
+                self.trades_summary['sells']['volume'] += actual_amount
+                self.trades_summary['sells']['fees'] += fee_amount
+                self.trades_summary['sells']['total_revenue'] += total_revenue
+                
+                print(colored(f"\nSELL Order Details:", "cyan"))
+                print(f"Amount: {amount} BTC")
+                print(f"Price: {price} MYR")
+                print(f"Fee Rate: {fee_rate*100:.3f}%")
+                print(f"Fee Amount: {fee_amount:.2f} MYR")
+                print(f"Total Revenue: {total_revenue:.2f} MYR")
+                print(colored(f"Net Profit/Loss: {net_profit:.2f} MYR", "green" if net_profit > 0 else "red"))
                 
                 self.current_position = 0
-                self.log_trade("SELL", price, amount, profit)
-            
+                self.total_profit += net_profit if net_profit > 0 else 0
+                self.total_loss += abs(net_profit) if net_profit < 0 else 0
+                
+            self.log_trade(action, price, amount, fee_amount, net_profit if action == "SELL" else 0)
             return True
+            
         except Exception as e:
             logging.error(f"Error executing trade: {e}")
             return False
 
     def show_performance(self):
-        win_rate = (self.winning_trades / self.total_trades * 100) if self.total_trades > 0 else 0
+        """Enhanced performance display including fees"""
         print("\nPerformance Metrics:")
-        print(colored(f"Total Profit: {self.total_profit:.2f} MYR", "green" if self.total_profit > 0 else "red"))
-        print(f"Total Trades: {self.total_trades}")
-        print(f"Win Rate: {win_rate:.2f}%")
+        print(colored(f"Total Trading Volume: {self.calculator.total_volume:.8f} BTC", "cyan"))
+        print(colored(f"Total Trading Fees: {self.calculator.total_fees:.2f} MYR", "yellow"))
+        print(colored(f"Total Profit: {self.total_profit:.2f} MYR", "green"))
+        print(colored(f"Total Loss: {self.total_loss:.2f} MYR", "red"))
+        
+        net_profit = self.total_profit - self.total_loss - self.calculator.total_fees
+        print(colored(f"Net Profit (after fees): {net_profit:.2f} MYR", "green" if net_profit > 0 else "red"))
         
         if self.trade_history:
-            print("\nRecent Trades:")
-            headers = ["Time", "Action", "Price", "Amount", "Profit"]
+            print("\nRecent Trades (including fees):")
+            headers = ["Time", "Action", "Price", "Amount", "Fees", "Net P/L"]
             recent_trades = self.trade_history[-5:]
             table = [[
                 trade['timestamp'].strftime('%Y-%m-%d %H:%M:%S'),
                 trade['action'],
                 f"{trade['price']:.2f}",
-                f"{trade['amount']:.4f}",
+                f"{trade['amount']:.8f}",
+                f"{trade['fees']:.2f}",
                 f"{trade['profit']:.2f}"
             ] for trade in recent_trades]
             print(tabulate(table, headers=headers, tablefmt="grid"))

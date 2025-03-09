@@ -18,7 +18,7 @@ except ImportError:
 load_dotenv()
 
 # Retrieve API key and secret from config.json
-config_path = os.path.join(os.path.dirname(__file__), 'config.json.luno')
+config_path = os.path.join(os.path.dirname(__file__), '.config.json')
 with open(config_path, 'r') as f:
     config = json.load(f)
     API_KEY = config.get('luno_api_key')
@@ -32,6 +32,41 @@ client = LunoAPIClient(API_KEY, API_SECRET)
 DEFAULT_PAIR = "XBTMYR"
 
 ACCOUNT_DETAILS_FILE = "account_details.json"
+
+class TradeCalculator:
+    def __init__(self):
+        self.total_fees = 0
+        self.total_volume = 0
+        self.maker_fee = 0
+        self.taker_fee = 0
+        self.update_fees()
+    
+    def update_fees(self):
+        try:
+            fee_info = client.get_fee_info("XBTMYR")
+            self.maker_fee = float(fee_info['maker_fee'])
+            self.taker_fee = float(fee_info['taker_fee'])
+        except Exception as e:
+            logging.error(f"Error getting fees: {e}")
+    
+    def calculate_buy_details(self, amount_to_use, price, is_maker=False):
+        fee_rate = self.maker_fee if is_maker else self.taker_fee
+        fee_amount = amount_to_use * fee_rate
+        btc_amount = (amount_to_use - fee_amount) / price
+        total_cost = amount_to_use
+        self.total_fees += fee_amount
+        self.total_volume += btc_amount
+        return btc_amount, fee_amount, total_cost
+
+    def calculate_sell_details(self, btc_amount, price, buy_price, is_maker=False):
+        fee_rate = self.maker_fee if is_maker else self.taker_fee
+        gross_amount = btc_amount * price
+        fee_amount = gross_amount * fee_rate
+        net_amount = gross_amount - fee_amount
+        cost_basis = btc_amount * buy_price
+        net_profit = net_amount - cost_basis
+        self.total_fees += fee_amount
+        return net_amount, fee_amount, net_profit
 
 def save_account_details():
     global fund, bought_price, btc_bought, total_profit, total_loss, total_buy_amount, taker_fee
@@ -151,47 +186,72 @@ def add_fund():
         print(f"Error adding fund: {e}")
 
 def buy_pair_with_fund():
-    global fund, bought_price, btc_bought, total_buy_amount, taker_fee  # Use global variables to update holdings and fund status
+    global fund, bought_price, btc_bought, total_buy_amount, taker_fee
+    calculator = TradeCalculator()
+    
     try:
         amount_to_use = float(input("Enter amount to use for buying (MYR): "))
         if amount_to_use > fund:
             print("Insufficient funds to execute the buy order.")
             return
+
         res = client.get_ticker("XBTMYR")
         last_trade_price = float(res['last_trade'])
-        fee_info = client.get_fee_info("XBTMYR")
-        taker_fee = float(fee_info['taker_fee'])
-        trading_fee_value = amount_to_use * taker_fee
-        btc_bought += (amount_to_use * (1 - taker_fee)) / last_trade_price
+        
+        btc_amount, fee_amount, total_cost = calculator.calculate_buy_details(
+            amount_to_use, last_trade_price, is_maker=False
+        )
+        
+        # Update account status
+        btc_bought += btc_amount
         bought_price = last_trade_price
-        fund -= amount_to_use
-        total_buy_amount += amount_to_use
-        print(f"Used {amount_to_use} MYR to buy {(amount_to_use * (1 - taker_fee)) / last_trade_price} BTC at {last_trade_price} MYR")
-        print(f"Buy Price: {last_trade_price} MYR, Unit XBTMYR: {btc_bought} BTC, Remaining Fund: {fund} MYR, Taker Fee: {taker_fee * 100}% ({trading_fee_value} MYR)")
+        fund -= total_cost
+        total_buy_amount += total_cost
+        
+        print(colored("\nBuy Order Details:", "cyan"))
+        print(f"Amount Spent: {amount_to_use:.2f} MYR")
+        print(f"BTC Received: {btc_amount:.8f} BTC")
+        print(f"Price: {last_trade_price:.2f} MYR")
+        print(f"Fee: {fee_amount:.2f} MYR")
+        print(f"Remaining Fund: {fund:.2f} MYR")
+        
     except Exception as e:
         print(f"Error during buying: {e}")
 
 def sell_pair_with_fund():
-    global fund, bought_price, btc_bought, taker_fee, total_profit, total_loss  # Use global variables to update holdings and fund status
+    global fund, bought_price, btc_bought, total_profit, total_loss
+    calculator = TradeCalculator()
+    
     try:
         btc_to_sell = float(input("Enter amount to sell (BTC): "))
         if btc_to_sell > btc_bought:
             print("Insufficient BTC holdings to execute the sell order.")
             return
+
         res = client.get_ticker("XBTMYR")
         last_trade_price = float(res['last_trade'])
-        amount_to_sell = btc_to_sell * last_trade_price
-        trading_fee_value = amount_to_sell * taker_fee
+        
+        net_amount, fee_amount, net_profit = calculator.calculate_sell_details(
+            btc_to_sell, last_trade_price, bought_price, is_maker=False
+        )
+        
+        # Update account status
         btc_bought -= btc_to_sell
-        fund += amount_to_sell * (1 - taker_fee)  # Assuming a 0.6% fee for selling
-        profit_loss = amount_to_sell * (1 - taker_fee) - (btc_to_sell * bought_price)
-        if profit_loss > 0:
-            total_profit += profit_loss
-            print(colored(f"Sold {btc_to_sell} BTC for {amount_to_sell} MYR at {last_trade_price} MYR, Profit: {profit_loss:.2f} MYR", "green", attrs=["bold"]))
+        fund += net_amount
+        
+        if net_profit > 0:
+            total_profit += net_profit
+            print(colored(f"\nSold {btc_to_sell:.8f} BTC for {net_amount:.2f} MYR", "green"))
+            print(colored(f"Profit: {net_profit:.2f} MYR", "green"))
         else:
-            total_loss += abs(profit_loss)
-            print(colored(f"Sold {btc_to_sell} BTC for {amount_to_sell} MYR at {last_trade_price} MYR, Loss: {abs(profit_loss):.2f} MYR", "red", attrs=["bold"]))
-        print(f"Sell Price: {last_trade_price} MYR, Unit XBTMYR: {btc_bought} BTC, Remaining Fund: {fund} MYR, Taker Fee: {taker_fee * 100}% ({trading_fee_value} MYR)")
+            total_loss += abs(net_profit)
+            print(colored(f"\nSold {btc_to_sell:.8f} BTC for {net_amount:.2f} MYR", "red"))
+            print(colored(f"Loss: {abs(net_profit):.2f} MYR", "red"))
+            
+        print(f"Fee: {fee_amount:.2f} MYR")
+        print(f"Remaining Fund: {fund:.2f} MYR")
+        print(f"Remaining BTC: {btc_bought:.8f} BTC")
+        
     except Exception as e:
         print(f"Error during selling: {e}")
 
