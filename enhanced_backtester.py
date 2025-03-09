@@ -44,51 +44,10 @@ class HistoricalDataCollector:
             print(colored(f"API Connection Test FAILED: {e}", "red"))
             return False
 
-    def collect_candle_data(self, days_back=30):
-        """Collect historical candle data"""
-        print(colored("\nCollecting historical data...", "cyan"))
-        
-        try:
-            # Get recent trades instead of candles since Luno API has limited candle data
-            since = int((datetime.now() - timedelta(days=days_back)).timestamp())
-            trades = self.client.list_trades(self.pair, since=since)
-            
-            if not trades or 'trades' not in trades:
-                print(colored("No trade data available", "red"))
-                return None
-                
-            # Convert trades to OHLCV format
-            df = pd.DataFrame(trades['trades'])
-            df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
-            df['price'] = df['price'].astype(float)
-            df['volume'] = df['volume'].astype(float)
-            
-            # Resample to hourly candles
-            hourly = df.set_index('timestamp').resample('1H').agg({
-                'price': ['first', 'max', 'min', 'last'],
-                'volume': 'sum'
-            }).dropna()
-            
-            # Rename columns
-            hourly.columns = ['open', 'high', 'low', 'close', 'volume']
-            hourly = hourly.reset_index()
-            
-            # Save to CSV
-            filename = f'historical_data_{self.pair}.csv'
-            hourly.to_csv(filename, index=False)
-            print(colored(f"Data saved to {filename}", "green"))
-            print(f"Collected {len(hourly)} hourly candles")
-            
-            return hourly
-            
-        except Exception as e:
-            print(colored(f"Error collecting data: {str(e)}", "red"))
-            logging.error(f"Data collection error: {str(e)}")
-            return None
-
-    def collect_data_24h(self):
+    def collect_recent_trades(self):
         """Collect last 24 hours of trade data"""
         try:
+            print(colored("\nCollecting recent trade data...", "cyan"))
             since = int((datetime.now() - timedelta(hours=24)).timestamp() * 1000)
             trades = self.client.list_trades(self.pair, since=since)
             
@@ -96,57 +55,65 @@ class HistoricalDataCollector:
                 print(colored("No trade data available", "red"))
                 return None
                 
-            # Convert trades to DataFrame
             df = pd.DataFrame(trades['trades'])
             df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
             df['price'] = df['price'].astype(float)
             df['volume'] = df['volume'].astype(float)
             
-            # Resample to 5-minute candles
-            candles = df.set_index('timestamp').resample('5T').agg({
+            # Create OHLCV data
+            ohlcv = df.set_index('timestamp').resample('5T').agg({
                 'price': ['first', 'max', 'min', 'last'],
                 'volume': 'sum'
             }).dropna()
             
-            candles.columns = ['open', 'high', 'low', 'close', 'volume']
-            candles = candles.reset_index()
+            ohlcv.columns = ['open', 'high', 'low', 'close', 'volume']
+            ohlcv = ohlcv.reset_index()
             
-            return candles
+            # Save data
+            ohlcv.to_csv('historical_data_XBTMYR.csv', index=False)
+            print(colored(f"Collected {len(ohlcv)} 5-minute candles", "green"))
+            return ohlcv
             
         except Exception as e:
-            print(colored(f"Error collecting 24h data: {str(e)}", "red"))
+            print(colored(f"Error collecting trade data: {str(e)}", "red"))
             return None
 
-    def get_sample_data(self, days=30):
-        """Generate sample data for testing"""
-        print(colored("Generating sample data for testing...", "yellow"))
+    def get_sample_data(self, hours=24):
+        """Generate sample data with realistic patterns"""
+        print(colored("\nGenerating sample data...", "yellow"))
         
-        # Generate dates with 5-minute intervals
+        # Generate 5-minute intervals for last 24 hours
         end_time = datetime.now()
-        start_time = end_time - timedelta(days=days)
-        dates = pd.date_range(start=start_time, end=end_time, freq='5min')
+        start_time = end_time - timedelta(hours=hours)
+        dates = pd.date_range(start=start_time, end=end_time, freq='5T')
         
-        # Generate sample price data with realistic patterns
-        base_price = 100000  # Base BTC price in MYR
-        price_series = pd.Series(index=dates)
-        noise = np.random.normal(0, 1, len(dates))
-        trend = np.linspace(0, 5000, len(dates))  # Add slight upward trend
+        # Get current price as base
+        try:
+            current_price = float(self.client.get_ticker(self.pair)['last_trade'])
+        except:
+            current_price = 100000  # Default base price if API fails
+            
+        # Generate price series with realistic volatility
+        price = current_price
+        prices = []
+        for _ in range(len(dates)):
+            change = np.random.normal(0, 0.001)  # 0.1% standard deviation
+            price *= (1 + change)
+            prices.append(price)
         
-        price_series = base_price + trend + noise * 500
-        
+        prices = np.array(prices)
         df = pd.DataFrame({
             'timestamp': dates,
-            'open': price_series,
-            'high': price_series * (1 + abs(noise) * 0.001),
-            'low': price_series * (1 - abs(noise) * 0.001),
-            'close': price_series + noise * 100,
+            'open': prices,
+            'high': prices * (1 + np.random.uniform(0, 0.002, len(dates))),
+            'low': prices * (1 - np.random.uniform(0, 0.002, len(dates))),
+            'close': prices * (1 + np.random.normal(0, 0.001, len(dates))),
             'volume': np.random.lognormal(0, 1, len(dates)) * 0.1
         })
         
-        # Save both real and sample data
-        filename = 'historical_data_XBTMYR.csv'
-        df.to_csv(filename, index=False)
-        print(colored(f"Sample data saved to {filename}", "green"))
+        # Save sample data
+        df.to_csv('historical_data_XBTMYR.csv', index=False)
+        print(colored(f"Generated {len(df)} sample candles", "green"))
         return df
 
 class EnhancedBackTester:
@@ -367,69 +334,62 @@ class EnhancedBackTester:
 def main():
     print(colored("Enhanced Backtester Starting...", "blue", attrs=["bold"]))
     
-    # Initialize data collector with API client
     collector = HistoricalDataCollector(client)
     
-    # Test API connection
-    if not collector.test_api_connection():
-        print(colored("Failed to connect to Luno API. Using sample data...", "yellow"))
+    # First try to get real data
+    data = collector.collect_recent_trades()
+    
+    # Fall back to sample data if real data collection fails
+    if data is None:
+        print(colored("\nUsing sample data instead...", "yellow"))
         data = collector.get_sample_data()
-    else:
-        data = collector.collect_candle_data(days_back=30)
-        if data is None:
-            print(colored("Failed to collect real data. Using sample data...", "yellow"))
-            data = collector.get_sample_data()
     
     if data is not None:
-        try:
-            # Initialize backtester
-            tester = EnhancedBackTester('historical_data_XBTMYR.csv', initial_capital=1000)
+        # Initialize backtester
+        tester = EnhancedBackTester('historical_data_XBTMYR.csv', initial_capital=1000)
+        
+        # Run backtest with initial parameters
+        results = tester.run_backtest({
+            'stop_loss': 0.02,
+            'take_profit': 0.03,
+            'ma_short': 20,
+            'ma_long': 50
+        })
+        
+        # Show results and optimize
+        if results and 'metrics' in results:
+            print("\nInitial Backtest Results:")
+            for key, value in results['metrics'].items():
+                if isinstance(value, float):
+                    print(f"{key.replace('_', ' ').title()}: {value:.2f}")
+                else:
+                    print(f"{key.replace('_', ' ').title()}: {value}")
             
-            # Run initial backtest
-            print("\nRunning initial backtest...")
-            results = tester.run_backtest({
-                'stop_loss': 0.02,
-                'take_profit': 0.03,
-                'ma_short': 20,
-                'ma_long': 50
-            })
+            # Only proceed with optimization if initial backtest was successful
+            print("\nOptimizing strategy parameters...")
+            parameter_ranges = {
+                'ma_short': range(10, 31, 5),
+                'ma_long': range(40, 61, 5),
+                'stop_loss': [0.01, 0.02, 0.03],
+                'take_profit': [0.02, 0.03, 0.04]
+            }
             
-            if results and 'metrics' in results:
-                print("\nInitial Backtest Results:")
-                for key, value in results['metrics'].items():
+            best_params, best_metrics = tester.optimize_strategy(parameter_ranges)
+            
+            if best_params and best_metrics:
+                print("\nOptimal Strategy Parameters:")
+                for param, value in best_params.items():
+                    print(f"{param}: {value}")
+                
+                print("\nOptimal Strategy Performance:")
+                for key, value in best_metrics.items():
                     if isinstance(value, float):
                         print(f"{key.replace('_', ' ').title()}: {value:.2f}")
                     else:
                         print(f"{key.replace('_', ' ').title()}: {value}")
-                
-                # Only proceed with optimization if initial backtest was successful
-                print("\nOptimizing strategy parameters...")
-                parameter_ranges = {
-                    'ma_short': range(10, 31, 5),
-                    'ma_long': range(40, 61, 5),
-                    'stop_loss': [0.01, 0.02, 0.03],
-                    'take_profit': [0.02, 0.03, 0.04]
-                }
-                
-                best_params, best_metrics = tester.optimize_strategy(parameter_ranges)
-                
-                if best_params and best_metrics:
-                    print("\nOptimal Strategy Parameters:")
-                    for param, value in best_params.items():
-                        print(f"{param}: {value}")
-                    
-                    print("\nOptimal Strategy Performance:")
-                    for key, value in best_metrics.items():
-                        if isinstance(value, float):
-                            print(f"{key.replace('_', ' ').title()}: {value:.2f}")
-                        else:
-                            print(f"{key.replace('_', ' ').title()}: {value}")
-            else:
-                print("Initial backtest failed to produce results")
-                
-        except Exception as e:
-            print(f"Error during backtesting: {e}")
-            logging.error(f"Backtesting error: {e}")
+        else:
+            print("Initial backtest failed to produce results")
+            
     else:
         print("Failed to collect or generate data for backtesting")
 
