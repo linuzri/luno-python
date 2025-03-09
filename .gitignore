@@ -1,4 +1,7 @@
 config.json
+config.json.*
+config.json.luno
+.config.json
 .env
 .md
 __pycache__/
