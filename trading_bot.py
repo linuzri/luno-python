@@ -18,7 +18,7 @@ except ImportError:
 load_dotenv()
 
 # Retrieve API key and secret from config.json
-config_path = os.path.join(os.path.dirname(__file__), 'config.json')
+config_path = os.path.join(os.path.dirname(__file__), 'config.json.luno')
 with open(config_path, 'r') as f:
     config = json.load(f)
     API_KEY = config.get('luno_api_key')
