@@ -32,13 +32,43 @@ client = LunoAPIClient(API_KEY, API_SECRET)
 DEFAULT_PAIR = "XBTMYR"
 
 class TradingStrategy:
-    def __init__(self):
-        self.position_size = 0
-        self.stop_loss = 0.02  # 2%
-        self.take_profit = 0.03  # 3%
-        self.max_position = 0.5  # 50% of total fund
-        self.trailing_stop = 0.01  # 1%
+    def __init__(self, config_path='config.json'):
+        # Load strategy parameters from config
+        with open(config_path, 'r') as f:
+            config = json.load(f)
+            trading_settings = config.get('trading_settings', {})
+            self.stop_loss = trading_settings.get('stop_loss_percentage', 2.0) / 100
+            self.take_profit = trading_settings.get('take_profit_percentage', 3.0) / 100
+            self.max_position = trading_settings.get('max_position_percentage', 50.0) / 100
+            self.trailing_stop = trading_settings.get('trailing_stop_percentage', 1.0) / 100
+            
+        self.highest_price = 0
+        self.trailing_stop_price = 0
         
+    def update_trailing_stop(self, current_price):
+        """Update trailing stop price based on current price"""
+        if current_price > self.highest_price:
+            self.highest_price = current_price
+            self.trailing_stop_price = current_price * (1 - self.trailing_stop)
+        return self.trailing_stop_price
+
+    def should_sell(self, entry_price, current_price):
+        """Determine if position should be sold based on strategy"""
+        # Update trailing stop
+        trailing_stop_price = self.update_trailing_stop(current_price)
+        
+        # Check sell conditions
+        take_profit_price = entry_price * (1 + self.take_profit)
+        stop_loss_price = entry_price * (1 - self.stop_loss)
+        
+        if current_price >= take_profit_price:
+            return True, "take_profit"
+        elif current_price <= stop_loss_price:
+            return True, "stop_loss"
+        elif current_price <= trailing_stop_price:
+            return True, "trailing_stop"
+        return False, None
+
     def calculate_position_size(self, fund, price):
         return min(fund * self.max_position / price, fund)
 
@@ -91,6 +121,7 @@ class AdvancedTradingBot:
             'buys': {'volume': 0, 'fees': 0, 'total_cost': 0},
             'sells': {'volume': 0, 'fees': 0, 'total_revenue': 0}
         }
+        self.price_history = []  # Add this line to initialize price history
         
         # Load trading settings from config
         with open(config_path, 'r') as f:
@@ -186,6 +217,10 @@ class AdvancedTradingBot:
                 self.current_position = actual_amount
                 self.entry_price = price
                 
+                # Reset trailing stop values for new position
+                self.strategy.highest_price = price
+                self.strategy.trailing_stop_price = price * (1 - self.strategy.trailing_stop)
+                
             elif action == "SELL":
                 actual_amount = amount * (1 - fee_rate)
                 total_revenue = total_amount - fee_amount
@@ -206,6 +241,10 @@ class AdvancedTradingBot:
                 print(f"Fee Amount: {fee_amount:.2f} MYR")
                 print(f"Total Revenue: {total_revenue:.2f} MYR")
                 print(colored(f"Net Profit/Loss: {net_profit:.2f} MYR", "green" if net_profit > 0 else "red"))
+                
+                # Add reason for sell
+                sell_reason = self.strategy.should_sell(self.entry_price, price)[1]
+                print(colored(f"Sell reason: {sell_reason}", "yellow"))
                 
                 self.current_position = 0
                 self.total_profit += net_profit if net_profit > 0 else 0
@@ -257,6 +296,70 @@ class AdvancedTradingBot:
             print(colored("✗ Connection Failed", "red", attrs=["bold"]))
             print(colored(f"✗ Error: {str(e)}", "red", attrs=["bold"]))
             return False
+
+    def show_position_status(self, current_price):
+        """Show current position status and indicators"""
+        if self.current_position > 0:
+            profit_loss = (current_price - self.entry_price) * self.current_position
+            profit_loss_percent = ((current_price - self.entry_price) / self.entry_price) * 100
+            
+            # Calculate trailing stop level
+            trailing_stop_price = self.strategy.trailing_stop_price
+            
+            print(colored("\nPosition Status:", "cyan"))
+            print(f"Current Price: {current_price:.2f} MYR")
+            print(f"Entry Price: {self.entry_price:.2f} MYR")
+            print(f"Position Size: {self.current_position:.8f} BTC")
+            print(f"Trailing Stop: {trailing_stop_price:.2f} MYR")
+            
+            if profit_loss >= 0:
+                print(colored(f"Unrealized Profit: {profit_loss:.2f} MYR (+{profit_loss_percent:.2f}%)", "green"))
+            else:
+                print(colored(f"Unrealized Loss: {abs(profit_loss):.2f} MYR ({profit_loss_percent:.2f}%)", "red"))
+
+    def run_trading_bot(self):
+        try:
+            logging.info("Starting trading bot...")
+            while True:
+                price = self.get_market_data()
+                if not price:
+                    continue
+
+                # Add current price to price history
+                self.price_history.append({
+                    'timestamp': datetime.now(),
+                    'price': price
+                })
+
+                # Maintain only last 50 prices
+                if len(self.price_history) > 50:
+                    self.price_history.pop(0)
+
+                # Extract prices for analysis
+                prices = [p['price'] for p in self.price_history]
+
+                if self.current_position > 0:
+                    should_sell, reason = self.strategy.should_sell(self.entry_price, price)
+                    if should_sell:
+                        self.execute_trade("SELL", price, self.current_position)
+                        logging.info(f"Sell triggered by {reason} at price {price}")
+                    else:
+                        self.show_position_status(price)
+
+                elif len(prices) >= 50 and self.analyze_market(prices):
+                    amount = self.strategy.calculate_position_size(self.current_fund, price)
+                    if amount > 0:
+                        self.execute_trade("BUY", price, amount)
+                        logging.info(f"Buy triggered at price {price}")
+
+                time.sleep(10)
+
+        except KeyboardInterrupt:
+            logging.info("Trading bot stopped by user")
+            print(colored("\nStopping trading bot...", "yellow"))
+        except Exception as e:
+            logging.error(f"Error in trading bot: {e}")
+            print(colored(f"Error: {e}", "red"))
 
 def menu():
     print(colored("\n====================", "blue", attrs=["bold"]))
