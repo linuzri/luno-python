@@ -66,7 +66,13 @@ class HistoricalDataCollector:
         """Collect trade data using dynamic timestamp"""
         try:
             print(colored("\nCollecting trade data...", "cyan"))
-            timestamp = get_default_timestamp()
+            
+            # Calculate timestamps for chunked data collection
+            end_time = datetime.now()
+            # Start with just 12 hours ago (within 24h limit)
+            start_time = end_time - timedelta(hours=12)
+            timestamp = int(start_time.timestamp() * 1000)
+            
             print(f"Collecting data from {datetime.fromtimestamp(timestamp/1000)}")
             trades = self.client.list_trades(self.pair, since=timestamp)
             
@@ -86,31 +92,30 @@ class HistoricalDataCollector:
             
             print(f"Found {len(df)} trades")
             
-            # Create OHLCV data with simplified resampling
+            # Create OHLCV data with 5-minute candles instead of 1-minute
+            # This helps with data sparsity
             df_grouped = df.set_index('timestamp')
             ohlcv = pd.DataFrame({
-                'open': df_grouped['price'].resample('1min').first(),
-                'high': df_grouped['price'].resample('1min').max(),
-                'low': df_grouped['price'].resample('1min').min(),
-                'close': df_grouped['price'].resample('1min').last(),
-                'volume': df_grouped['volume'].resample('1min').sum()
+                'open': df_grouped['price'].resample('5min').first(),
+                'high': df_grouped['price'].resample('5min').max(),
+                'low': df_grouped['price'].resample('5min').min(),
+                'close': df_grouped['price'].resample('5min').last(),
+                'volume': df_grouped['volume'].resample('5min').sum()
             }).dropna()
             
-            ohlcv = ohlcv.reset_index()
-            
-            # Save data
-            filename = 'historical_data_XBTMYR.csv'
-            ohlcv.to_csv(filename, index=False)
-            print(colored(f"Saved {len(ohlcv)} candles to {filename}", "green"))
-            
+            # Save to CSV with index to preserve timestamps
+            ohlcv.to_csv('historical_data_XBTMYR.csv')
+            print(colored(f"Saved {len(ohlcv)} candles to historical_data_XBTMYR.csv", "green"))
             return ohlcv
             
         except Exception as e:
             print(colored(f"Error collecting trade data: {str(e)}", "red"))
             logging.error(f"Trade data collection error: {str(e)}")
-            return None
+            # If real data collection fails, generate sample data automatically
+            print(colored("\nGenerating sample data instead...", "yellow"))
+            return self.get_sample_data(hours=12)
 
-    def get_sample_data(self, hours=24):
+    def get_sample_data(self, hours=12):
         """Generate sample data with realistic patterns"""
         print(colored("\nGenerating sample data...", "yellow"))
         
@@ -292,6 +297,17 @@ class EnhancedBackTester:
             self.data['atr'] = self.calculate_atr(self.data)
             self.data['volume_ma'] = self.data['volume'].rolling(window=20).mean()
             
+            # Calculate additional volume indicators
+            self.data['volume_ma'] = self.data['volume'].rolling(window=20).mean()
+            self.data['volume_std'] = self.data['volume'].rolling(window=20).std()
+            self.data['volume_vwap'] = (self.data['volume'] * self.data['close']).cumsum() / self.data['volume'].cumsum()
+            
+            # Volume zones
+            self.data['volume_zone'] = pd.qcut(self.data['volume'], q=3, labels=['Low', 'Medium', 'High'])
+            
+            # Volume momentum
+            self.data['volume_momentum'] = self.data['volume'] / self.data['volume'].shift(1)
+            
             # Debug print
             print(f"Indicators calculated. Sample ATR: {self.data['atr'].head().tolist()}")
             
@@ -320,9 +336,14 @@ class EnhancedBackTester:
                     # 1. Short MA crosses above Long MA
                     # 2. Price is near VWAP (within 0.5%)
                     # 3. Volume is above average
+                    volume_conditions = (
+                        volume_ratio > 1.2 and  # Above average volume
+                        self.data['volume_zone'].iloc[i] != 'Low' and  # Not in low volume zone
+                        self.data['volume_momentum'].iloc[i] > 1.1  # Increasing volume
+                    )
                     if (ma_short > ma_long and 
                         abs(current_price - vwap) / vwap < 0.005 and
-                        volume_ratio > 1.2):
+                        volume_conditions):
                         self.current_index = i
                         self.execute_buy(current_price)
                         print(f"BUY at {current_price} (Volume ratio: {volume_ratio:.2f})")
@@ -545,86 +566,164 @@ class EnhancedBackTester:
         except Exception as e:
             logging.error(f"Error saving results to file: {e}")
 
+    def monitor_indicators(self):
+        """Monitor current market indicators"""
+        try:
+            # Debug information
+            print("\nData points available:", len(self.data))
+            
+            price = float(self.data['close'].iloc[-1])
+            
+            # Calculate MAs with error checking
+            ma20_series = self.data['close'].rolling(window=20).mean()
+            ma50_series = self.data['close'].rolling(window=50).mean()
+            
+            ma20 = ma20_series.iloc[-1]
+            ma50 = ma50_series.iloc[-1]
+            
+            # Print MA debug info
+            print("\nMA Calculation Debug:")
+            print(f"Last 5 MA20 values: {ma20_series.tail().tolist()}")
+            print(f"Last 5 MA50 values: {ma50_series.tail().tolist()}")
+            
+            # Calculate RSI
+            delta = self.data['close'].diff()
+            gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+            loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+            rs = gain / loss
+            rsi = 100 - (100 / (1 + rs)).iloc[-1]
+            
+            print("\nCurrent Market Indicators:")
+            print(f"Price: {price:,.2f} MYR")
+            print(f"MA20: {ma20:,.2f} MYR")
+            print(f"MA50: {ma50:,.2f} MYR")
+            print(f"RSI: {rsi:.2f}")
+            
+            # Check buy conditions
+            if ma20 > ma50 and 30 < rsi < 70:
+                print(colored("\nBuy Signal Conditions:", "green"))
+                print("✓ MA20 is above MA50")
+                print("✓ RSI is in optimal range (30-70)")
+            else:
+                print(colored("\nBuy Signal Conditions:", "red"))
+                if ma20 <= ma50:
+                    print("✗ MA20 is below MA50")
+                if rsi <= 30:
+                    print("✗ RSI is oversold (<30)")
+                elif rsi >= 70:
+                    print("✗ RSI is overbought (>70)")
+                
+        except Exception as e:
+            print(colored(f"Error monitoring indicators: {e}", "red"))
+            print("Data shape:", self.data.shape)
+            print("Available columns:", self.data.columns.tolist())
+
+def menu():
+    print(colored("\n====================", "blue", attrs=["bold"]))
+    print(colored("Enhanced Backtester", "blue", attrs=["bold"]))
+    print(colored("====================", "blue", attrs=["bold"]))
+    print("1. Run Backtest")
+    print("2. Optimize Strategy")
+    print("3. Show Results")
+    print("4. Monitor Market Indicators")
+    print("0. Exit")
+    return input("Enter your choice: ")
+
 def main():
     print(colored("Enhanced Backtester Starting...", "blue", attrs=["bold"]))
     
     collector = HistoricalDataCollector(client)
+    tester = None
     
-    # First try to get real data
-    data = collector.collect_recent_trades()
-    
-    # Fall back to sample data if real data collection fails
-    if data is None:
-        print(colored("\nUsing sample data instead...", "yellow"))
-        data = collector.get_sample_data()
-    
-    if data is not None:
-        # Initialize backtester
-        tester = EnhancedBackTester('historical_data_XBTMYR.csv', initial_capital=1000)
+    while True:
+        choice = menu()
         
-        # Run initial backtest with optimal strategy if available
-        initial_params = (tester.optimal_strategy['parameters'] 
-                        if tester.optimal_strategy 
-                        else {
-                            'stop_loss': 0.02,
-                            'take_profit': 0.03,
-                            'ma_short': 20,
-                            'ma_long': 50
-                        })
-        
-        print("\nRunning initial backtest...")
-        results = tester.run_backtest(initial_params)
-        
-        # Show results and optimize
-        if results and 'metrics' in results:
-            # Save initial results
-            initial_results = {
-                'parameters': initial_params,
-                'metrics': results['metrics']
-            }
-            tester.save_results_to_file(initial_results)
+        if choice == '1':
+            # First try to get real data
+            data = collector.collect_recent_trades()
             
-            print("\nInitial Backtest Results:")
-            for key, value in results['metrics'].items():
-                if isinstance(value, float):
-                    print(f"{key.replace('_', ' ').title()}: {value:.2f}")
+            # Fall back to sample data if real data collection fails
+            if data is None:
+                print(colored("\nUsing sample data instead...", "yellow"))
+                data = collector.get_sample_data()
+            
+            if data is not None:
+                # Initialize backtester
+                tester = EnhancedBackTester('historical_data_XBTMYR.csv', initial_capital=1000)
+                
+                # Run initial backtest with optimal strategy if available
+                initial_params = (tester.optimal_strategy['parameters'] 
+                                if tester.optimal_strategy 
+                                else {
+                                    'stop_loss': 0.02,
+                                    'take_profit': 0.03,
+                                    'ma_short': 20,
+                                    'ma_long': 50
+                                })
+                
+                print("\nRunning initial backtest...")
+                results = tester.run_backtest(initial_params)
+                
+                if results and 'metrics' in results:
+                    # Save initial results
+                    initial_results = {
+                        'parameters': initial_params,
+                        'metrics': results['metrics']
+                    }
+                    tester.save_results_to_file(initial_results)
+                    
+                    print("\nInitial Backtest Results:")
+                    for key, value in results['metrics'].items():
+                        if isinstance(value, float):
+                            print(f"{key.replace('_', ' ').title()}: {value:.2f}")
+                        else:
+                            print(f"{key.replace('_', ' ').title()}: {value}")
                 else:
-                    print(f"{key.replace('_', ' ').title()}: {value}")
-            
-            # Only proceed with optimization if initial backtest was successful
-            print("\nOptimizing strategy parameters...")
-            parameter_ranges = {
-                'ma_short': range(10, 31, 5),
-                'ma_long': range(40, 61, 5),
-                'stop_loss': [0.01, 0.02, 0.03],
-                'take_profit': [0.02, 0.03, 0.04]
-            }
-            
-            best_params, best_metrics = tester.optimize_strategy(parameter_ranges)
-            
-            if best_params and best_metrics:
-                # Save optimal results
-                optimal_results = {
-                    'parameters': best_params,
-                    'metrics': best_metrics
+                    print("Initial backtest failed to produce results")
+            else:
+                print("Failed to collect or generate data for backtesting")
+        
+        elif choice == '2':
+            if tester:
+                print("\nOptimizing strategy parameters...")
+                parameter_ranges = {
+                    'ma_short': range(10, 31, 5),
+                    'ma_long': range(40, 61, 5),
+                    'stop_loss': [0.01, 0.02, 0.03],
+                    'take_profit': [0.02, 0.03, 0.04]
                 }
-                tester.save_results_to_file(optimal_results, is_optimal=True)
                 
-                print("\nOptimal Strategy Parameters:")
-                for param, value in best_params.items():
-                    print(f"{param}: {value}")
+                best_params, best_metrics = tester.optimize_strategy(parameter_ranges)
                 
-                print("\nOptimal Strategy Performance:")
-                for key, value in best_metrics.items():
-                    if isinstance(value, float):
-                        print(f"{key.replace('_', ' ').title()}: {value:.2f}")
-                    else:
-                        print(f"{key.replace('_', ' ').title()}: {value}")
+                if best_params and best_metrics:
+                    optimal_results = {
+                        'parameters': best_params,
+                        'metrics': best_metrics
+                    }
+                    tester.save_results_to_file(optimal_results, is_optimal=True)
+            else:
+                print(colored("Please run backtest first (Option 1)", "red"))
+        
+        elif choice == '3':
+            if tester:
+                tester.plot_results()
+            else:
+                print(colored("Please run backtest first (Option 1)", "red"))
+        
+        elif choice == '4':
+            if tester:
+                print(colored("\nMonitoring market indicators...", "cyan"))
+                tester.monitor_indicators()
+                input("\nPress Enter to continue...")
+            else:
+                print(colored("Please run backtest first (Option 1)", "red"))
+        
+        elif choice == '0':
+            print(colored("Exiting...", "red"))
+            break
+        
         else:
-            print("Initial backtest failed to produce results")
-            
-    else:
-        print("Failed to collect or generate data for backtesting")
+            print(colored("Invalid choice!", "red"))
 
 if __name__ == '__main__':
     main()
