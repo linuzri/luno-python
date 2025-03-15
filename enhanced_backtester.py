@@ -63,17 +63,20 @@ class HistoricalDataCollector:
             return False
 
     def collect_recent_trades(self):
-        """Collect trade data using dynamic timestamp"""
         try:
-            print(colored("\nCollecting trade data...", "cyan"))
+            current_datetime = datetime.now()
+            print(colored(f"\nDate: {current_datetime.strftime('%Y-%m-%d')}", "cyan"))
+            print(colored(f"Time: {current_datetime.strftime('%H:%M:%S')}", "cyan"))
+            print(colored("Attempting to collect REAL market data from Luno...", "cyan"))
             
             # Calculate timestamps for chunked data collection
-            end_time = datetime.now()
-            # Start with just 12 hours ago (within 24h limit)
+            end_time = current_datetime
             start_time = end_time - timedelta(hours=12)
             timestamp = int(start_time.timestamp() * 1000)
             
-            print(f"Collecting data from {datetime.fromtimestamp(timestamp/1000)}")
+            print(f"Collecting data from: {start_time.strftime('%Y-%m-%d %H:%M:%S')}")
+            print(f"                  to: {end_time.strftime('%Y-%m-%d %H:%M:%S')}")
+            
             trades = self.client.list_trades(self.pair, since=timestamp)
             
             if not trades or 'trades' not in trades:
@@ -81,6 +84,17 @@ class HistoricalDataCollector:
                 return None
                 
             df = pd.DataFrame(trades['trades'])
+            df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
+            
+            print(colored("\nData Summary:", "green"))
+            print(f"First trade: {df['timestamp'].min().strftime('%Y-%m-%d %H:%M:%S')}")
+            print(f"Last trade:  {df['timestamp'].max().strftime('%Y-%m-%d %H:%M:%S')}")
+            print(f"Total trades: {len(df):,}")
+            
+            print(colored(f"SUCCESS: Using REAL market data from Luno", "green"))
+            print(f"Time range: {df['timestamp'].min()} to {df['timestamp'].max()}")
+            print(f"Number of real trades: {len(df)}")
+            
             if len(df) == 0:
                 print(colored("No trades found in the time period", "red"))
                 return None
@@ -109,15 +123,14 @@ class HistoricalDataCollector:
             return ohlcv
             
         except Exception as e:
-            print(colored(f"Error collecting trade data: {str(e)}", "red"))
+            print(colored(f"FAILED to get real data: {str(e)}", "red"))
             logging.error(f"Trade data collection error: {str(e)}")
-            # If real data collection fails, generate sample data automatically
-            print(colored("\nGenerating sample data instead...", "yellow"))
-            return self.get_sample_data(hours=12)
+            return None
 
     def get_sample_data(self, hours=12):
         """Generate sample data with realistic patterns"""
-        print(colored("\nGenerating sample data...", "yellow"))
+        print(colored("\nWARNING: Using SIMULATED market data!", "yellow", attrs=["bold"]))
+        print("Real market data collection failed, generating dummy data instead")
         
         # Generate 1-minute intervals for last 24 hours
         end_time = datetime.now()
@@ -182,6 +195,7 @@ class HistoricalDataCollector:
         # Save enhanced sample data
         df.to_csv('historical_data_XBTMYR.csv', index=False)
         print(colored(f"Generated {len(df)} enhanced sample candles", "green"))
+        print(colored("Note: This is simulated data, not real market data!", "yellow"))
         return df
 
     def calculate_atr(self, df, period=14):
@@ -622,10 +636,12 @@ def menu():
     print(colored("\n====================", "blue", attrs=["bold"]))
     print(colored("Enhanced Backtester", "blue", attrs=["bold"]))
     print(colored("====================", "blue", attrs=["bold"]))
-    print("1. Run Backtest")
-    print("2. Optimize Strategy")
-    print("3. Show Results")
-    print("4. Monitor Market Indicators")
+    print("1. Run Backtest (Auto-detect data source)")
+    print("2. Run Backtest (Force real data)")
+    print("3. Run Backtest (Force sample data)")
+    print("4. Optimize Strategy")
+    print("5. Show Results")
+    print("6. Monitor Market Indicators")
     print("0. Exit")
     return input("Enter your choice: ")
 
@@ -638,14 +654,18 @@ def main():
     while True:
         choice = menu()
         
-        if choice == '1':
-            # First try to get real data
-            data = collector.collect_recent_trades()
-            
-            # Fall back to sample data if real data collection fails
-            if data is None:
-                print(colored("\nUsing sample data instead...", "yellow"))
-                data = collector.get_sample_data()
+        if choice in ['1', '2', '3']:
+            if choice == '1':
+                data = collector.collect_recent_trades()  # Auto-detect
+                if data is None:
+                    data = collector.get_sample_data()
+            elif choice == '2':
+                data = collector.collect_recent_trades()  # Force real data
+                if data is None:
+                    print(colored("Failed to get real data. Please try again.", "red"))
+                    continue
+            else:
+                data = collector.get_sample_data()  # Force sample data
             
             if data is not None:
                 # Initialize backtester
@@ -683,7 +703,7 @@ def main():
             else:
                 print("Failed to collect or generate data for backtesting")
         
-        elif choice == '2':
+        elif choice == '4':
             if tester:
                 print("\nOptimizing strategy parameters...")
                 parameter_ranges = {
@@ -704,13 +724,13 @@ def main():
             else:
                 print(colored("Please run backtest first (Option 1)", "red"))
         
-        elif choice == '3':
+        elif choice == '5':
             if tester:
                 tester.plot_results()
             else:
                 print(colored("Please run backtest first (Option 1)", "red"))
         
-        elif choice == '4':
+        elif choice == '6':
             if tester:
                 print(colored("\nMonitoring market indicators...", "cyan"))
                 tester.monitor_indicators()

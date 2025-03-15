@@ -596,3 +596,394 @@ Max Drawdown: 0
 Profit Factor: 0
 Final Capital: 1000
 ==================================================
+
+==================================================
+Backtest Results - 2025-03-15 09:09:21
+==================================================
+STRATEGY PARAMETERS:
+ma_short: 10
+ma_long: 40
+stop_loss: 0.01
+take_profit: 0.02
+
+PERFORMANCE METRICS:
+Total Trades: 0
+Winning Trades: 0
+Losing Trades: 0
+Win Rate: 0
+Total Profit: 0
+Average Profit: 0
+Largest Win: 0
+Largest Loss: 0
+Max Drawdown: 0
+Profit Factor: 0
+Final Capital: 1000
+==================================================
+
+==================================================
+Backtest Results - 2025-03-15 09:10:05
+==================================================
+STRATEGY PARAMETERS:
+ma_short: 10
+ma_long: 40
+stop_loss: 0.01
+take_profit: 0.02
+
+PERFORMANCE METRICS:
+Total Trades: 0
+Winning Trades: 0
+Losing Trades: 0
+Win Rate: 0
+Total Profit: 0
+Average Profit: 0
+Largest Win: 0
+Largest Loss: 0
+Max Drawdown: 0
+Profit Factor: 0
+Final Capital: 1000
+==================================================
+
+==================================================
+Backtest Results - 2025-03-15 09:10:43
+==================================================
+STRATEGY PARAMETERS:
+ma_short: 10
+ma_long: 40
+stop_loss: 0.01
+take_profit: 0.02
+
+PERFORMANCE METRICS:
+Total Trades: 1
+Winning Trades: 1
+Losing Trades: 0
+Win Rate: 1.00
+Total Profit: 20.59
+Average Profit: 20.59
+Largest Win: 20.59
+Largest Loss: 20.59
+Max Drawdown: 0
+Profit Factor: inf
+Final Capital: 1020.59
+==================================================
+
+==================================================
+Backtest Results - 2025-03-15 09:11:08
+==================================================
+STRATEGY PARAMETERS:
+ma_short: 10
+ma_long: 40
+stop_loss: 0.01
+take_profit: 0.02
+
+PERFORMANCE METRICS:
+Total Trades: 1
+Winning Trades: 0
+Losing Trades: 1
+Win Rate: 0.00
+Total Profit: -8.79
+Average Profit: -8.79
+Largest Win: -8.79
+Largest Loss: -8.79
+Max Drawdown: 0.88
+Profit Factor: 0.00
+Final Capital: 991.21
+==================================================
+
+==================================================
+Backtest Results - 2025-03-15 09:13:25
+==================================================
+STRATEGY PARAMETERS:
+ma_short: 10
+ma_long: 40
+stop_loss: 0.01
+take_profit: 0.02
+
+PERFORMANCE METRICS:
+Total Trades: 0
+Winning Trades: 0
+Losing Trades: 0
+Win Rate: 0
+Total Profit: 0
+Average Profit: 0
+Largest Win: 0
+Largest Loss: 0
+Max Drawdown: 0
+Profit Factor: 0
+Final Capital: 1000
+==================================================
+
+==================================================
+Backtest Results - 2025-03-15 09:13:40
+==================================================
+STRATEGY PARAMETERS:
+ma_short: 10
+ma_long: 40
+stop_loss: 0.01
+take_profit: 0.02
+
+PERFORMANCE METRICS:
+Total Trades: 0
+Winning Trades: 0
+Losing Trades: 0
+Win Rate: 0
+Total Profit: 0
+Average Profit: 0
+Largest Win: 0
+Largest Loss: 0
+Max Drawdown: 0
+Profit Factor: 0
+Final Capital: 1000
+==================================================
+
+==================================================
+Backtest Results - 2025-03-15 09:13:44
+==================================================
+STRATEGY PARAMETERS:
+ma_short: 10
+ma_long: 40
+stop_loss: 0.01
+take_profit: 0.02
+
+PERFORMANCE METRICS:
+Total Trades: 0
+Winning Trades: 0
+Losing Trades: 0
+Win Rate: 0
+Total Profit: 0
+Average Profit: 0
+Largest Win: 0
+Largest Loss: 0
+Max Drawdown: 0
+Profit Factor: 0
+Final Capital: 1000
+==================================================
+
+==================================================
+Backtest Results - 2025-03-15 09:15:34
+==================================================
+STRATEGY PARAMETERS:
+ma_short: 10
+ma_long: 40
+stop_loss: 0.01
+take_profit: 0.02
+
+PERFORMANCE METRICS:
+Total Trades: 0
+Winning Trades: 0
+Losing Trades: 0
+Win Rate: 0
+Total Profit: 0
+Average Profit: 0
+Largest Win: 0
+Largest Loss: 0
+Max Drawdown: 0
+Profit Factor: 0
+Final Capital: 1000
+==================================================
+
+==================================================
+Backtest Results - 2025-03-15 09:16:00
+==================================================
+STRATEGY PARAMETERS:
+ma_short: 10
+ma_long: 40
+stop_loss: 0.01
+take_profit: 0.02
+
+PERFORMANCE METRICS:
+Total Trades: 0
+Winning Trades: 0
+Losing Trades: 0
+Win Rate: 0
+Total Profit: 0
+Average Profit: 0
+Largest Win: 0
+Largest Loss: 0
+Max Drawdown: 0
+Profit Factor: 0
+Final Capital: 1000
+==================================================
+
+==================================================
+Backtest Results - 2025-03-15 09:16:18
+==================================================
+OPTIMAL STRATEGY PARAMETERS:
+ma_short: 10
+ma_long: 40
+stop_loss: 0.01
+take_profit: 0.02
+
+PERFORMANCE METRICS:
+Total Trades: 0
+Winning Trades: 0
+Losing Trades: 0
+Win Rate: 0
+Total Profit: 0
+Average Profit: 0
+Largest Win: 0
+Largest Loss: 0
+Max Drawdown: 0
+Profit Factor: 0
+Final Capital: 1000
+==================================================
+
+==================================================
+Backtest Results - 2025-03-15 09:16:29
+==================================================
+OPTIMAL STRATEGY PARAMETERS:
+ma_short: 10
+ma_long: 40
+stop_loss: 0.01
+take_profit: 0.02
+
+PERFORMANCE METRICS:
+Total Trades: 0
+Winning Trades: 0
+Losing Trades: 0
+Win Rate: 0
+Total Profit: 0
+Average Profit: 0
+Largest Win: 0
+Largest Loss: 0
+Max Drawdown: 0
+Profit Factor: 0
+Final Capital: 1000
+==================================================
+
+==================================================
+Backtest Results - 2025-03-15 09:16:37
+==================================================
+STRATEGY PARAMETERS:
+ma_short: 10
+ma_long: 40
+stop_loss: 0.01
+take_profit: 0.02
+
+PERFORMANCE METRICS:
+Total Trades: 1
+Winning Trades: 1
+Losing Trades: 0
+Win Rate: 1.00
+Total Profit: 19.44
+Average Profit: 19.44
+Largest Win: 19.44
+Largest Loss: 19.44
+Max Drawdown: 0
+Profit Factor: inf
+Final Capital: 1019.44
+==================================================
+
+==================================================
+Backtest Results - 2025-03-15 09:16:45
+==================================================
+STRATEGY PARAMETERS:
+ma_short: 10
+ma_long: 40
+stop_loss: 0.01
+take_profit: 0.02
+
+PERFORMANCE METRICS:
+Total Trades: 2
+Winning Trades: 1
+Losing Trades: 1
+Win Rate: 0.50
+Total Profit: 10.95
+Average Profit: 5.48
+Largest Win: 21.63
+Largest Loss: -10.68
+Max Drawdown: 1.07
+Profit Factor: 2.03
+Final Capital: 1010.95
+==================================================
+
+==================================================
+Backtest Results - 2025-03-15 09:16:49
+==================================================
+STRATEGY PARAMETERS:
+ma_short: 10
+ma_long: 40
+stop_loss: 0.01
+take_profit: 0.02
+
+PERFORMANCE METRICS:
+Total Trades: 2
+Winning Trades: 1
+Losing Trades: 1
+Win Rate: 0.50
+Total Profit: 17.65
+Average Profit: 8.82
+Largest Win: 21.19
+Largest Loss: -3.54
+Max Drawdown: 0.35
+Profit Factor: 5.99
+Final Capital: 1017.65
+==================================================
+
+==================================================
+Backtest Results - 2025-03-15 09:16:51
+==================================================
+STRATEGY PARAMETERS:
+ma_short: 10
+ma_long: 40
+stop_loss: 0.01
+take_profit: 0.02
+
+PERFORMANCE METRICS:
+Total Trades: 3
+Winning Trades: 3
+Losing Trades: 0
+Win Rate: 1.00
+Total Profit: 22.32
+Average Profit: 7.44
+Largest Win: 19.10
+Largest Loss: 0.50
+Max Drawdown: 0
+Profit Factor: inf
+Final Capital: 1022.32
+==================================================
+
+==================================================
+Backtest Results - 2025-03-15 09:16:53
+==================================================
+STRATEGY PARAMETERS:
+ma_short: 10
+ma_long: 40
+stop_loss: 0.01
+take_profit: 0.02
+
+PERFORMANCE METRICS:
+Total Trades: 2
+Winning Trades: 1
+Losing Trades: 1
+Win Rate: 0.50
+Total Profit: 8.15
+Average Profit: 4.07
+Largest Win: 8.50
+Largest Loss: -0.35
+Max Drawdown: 0.04
+Profit Factor: 23.97
+Final Capital: 1008.15
+==================================================
+
+==================================================
+Backtest Results - 2025-03-15 09:18:14
+==================================================
+OPTIMAL STRATEGY PARAMETERS:
+ma_short: 10
+ma_long: 55
+stop_loss: 0.01
+take_profit: 0.04
+
+PERFORMANCE METRICS:
+Total Trades: 2
+Winning Trades: 2
+Losing Trades: 0
+Win Rate: 1.00
+Total Profit: 41.32
+Average Profit: 20.66
+Largest Win: 38.37
+Largest Loss: 2.95
+Max Drawdown: 0
+Profit Factor: inf
+Final Capital: 1041.32
+==================================================

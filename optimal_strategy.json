@@ -1,23 +1,23 @@
 {
     "parameters": {
         "ma_short": 10,
-        "ma_long": 40,
+        "ma_long": 55,
         "stop_loss": 0.01,
-        "take_profit": 0.02
+        "take_profit": 0.04
     },
     "metrics": {
         "total_trades": 2,
-        "winning_trades": 1,
+        "winning_trades": 2,
         "losing_trades": 0,
-        "win_rate": 0.5,
-        "total_profit": 20.274176211865775,
-        "average_profit": 10.137088105932888,
-        "largest_win": 20.274176211865775,
-        "largest_loss": 0,
+        "win_rate": 1.0,
+        "total_profit": 41.31626519176514,
+        "average_profit": 20.65813259588257,
+        "largest_win": 38.37031894651264,
+        "largest_loss": 2.9459462452524994,
         "max_drawdown": 0,
-        "profit_factor": 999999,
-        "final_capital": 1020.2741762118658
+        "profit_factor": Infinity,
+        "final_capital": 1041.316265191765
     },
-    "timestamp": "2024-01-06T00:00:00.000Z",
+    "timestamp": "2025-03-15T09:18:14.228813",
     "initial_capital": 1000
 }
