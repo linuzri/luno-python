@@ -987,3 +987,26 @@ Max Drawdown: 0
 Profit Factor: inf
 Final Capital: 1041.32
 ==================================================
+
+==================================================
+Backtest Results - 2025-03-15 09:41:12
+==================================================
+OPTIMAL STRATEGY PARAMETERS:
+ma_short: 10
+ma_long: 55
+stop_loss: 0.01
+take_profit: 0.04
+
+PERFORMANCE METRICS:
+Total Trades: 2
+Winning Trades: 2
+Losing Trades: 0
+Win Rate: 1.00
+Total Profit: 41.32
+Average Profit: 20.66
+Largest Win: 38.37
+Largest Loss: 2.95
+Max Drawdown: 0
+Profit Factor: inf
+Final Capital: 1041.32
+==================================================

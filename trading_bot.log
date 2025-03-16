@@ -1,3 +1,4 @@
 2025-03-09 09:24:06,909 - INFO - Trade executed: {'timestamp': datetime.datetime(2025, 3, 9, 9, 24, 6, 908946), 'action': 'BUY', 'price': 385099.0, 'amount': 0.001, 'profit': 0}
 2025-03-09 10:20:03,775 - INFO - Trade executed: {'timestamp': datetime.datetime(2025, 3, 9, 10, 20, 3, 775578), 'action': 'BUY', 'price': 384000.0, 'amount': 0.001, 'fees': 2.3040000000000003, 'profit': 0}
 2025-03-12 17:42:06,138 - INFO - Trade executed: {'timestamp': datetime.datetime(2025, 3, 12, 17, 42, 6, 138585), 'action': 'BUY', 'price': 366781.0, 'amount': 0.001, 'fees': 2.200686, 'profit': 0}
+2025-03-15 08:06:52,702 - INFO - Trade executed: {'timestamp': datetime.datetime(2025, 3, 15, 8, 6, 52, 701928), 'action': 'BUY', 'price': 373967.0, 'amount': 0.001, 'fees': 2.243802, 'profit': 0}
