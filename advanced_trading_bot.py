@@ -37,10 +37,10 @@ class TradingStrategy:
         with open(config_path, 'r') as f:
             config = json.load(f)
             trading_settings = config.get('trading_settings', {})
-            self.stop_loss = trading_settings.get('stop_loss_percentage', 2.0) / 100
-            self.take_profit = trading_settings.get('take_profit_percentage', 3.0) / 100
-            self.max_position = trading_settings.get('max_position_percentage', 50.0) / 100
-            self.trailing_stop = trading_settings.get('trailing_stop_percentage', 1.0) / 100
+            self.stop_loss = trading_settings.get('stop_loss_percentage', 1.0) / 100
+            self.take_profit = trading_settings.get('take_profit_percentage', 1.5) / 100
+            self.max_position = trading_settings.get('max_position_percentage', 25.0) / 100
+            self.trailing_stop = trading_settings.get('trailing_stop_percentage', 0.5) / 100
             
         self.highest_price = 0
         self.trailing_stop_price = 0

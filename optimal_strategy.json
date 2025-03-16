@@ -3,7 +3,7 @@
         "ma_short": 10,
         "ma_long": 55,
         "stop_loss": 0.01,
-        "take_profit": 0.04
+        "take_profit": 0.015
     },
     "metrics": {
         "total_trades": 2,
