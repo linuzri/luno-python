@@ -1,0 +1,6 @@
+pandas
+numpy
+luno-api-client
+python-dotenv
+tabulate
+termcolor
