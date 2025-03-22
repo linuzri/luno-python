@@ -258,8 +258,21 @@ class AdvancedTradingBot:
             return False
 
     def show_performance(self):
-        """Enhanced performance display including fees"""
-        print("\nPerformance Metrics:")
+        """Enhanced performance display including fees and fund status"""
+        print("\nFund Status:")
+        print(colored(f"Initial Fund: {self.initial_fund:.2f} MYR", "cyan"))
+        print(colored(f"Current Fund: {self.current_fund:.2f} MYR", "cyan"))
+        print(colored(f"Available for Trading: {self.current_fund - self.min_trade_amount:.2f} MYR", "cyan"))
+        print(colored(f"Minimum Trade Amount: {self.min_trade_amount:.2f} MYR", "cyan"))
+
+        if self.current_fund > self.initial_fund:
+            profit = self.current_fund - self.initial_fund
+            print(colored(f"Total Return: +{profit:.2f} MYR (+{(profit/self.initial_fund)*100:.2f}%)", "green"))
+        else:
+            loss = self.initial_fund - self.current_fund
+            print(colored(f"Total Return: -{loss:.2f} MYR (-{(loss/self.initial_fund)*100:.2f}%)", "red"))
+
+        print("\nTrading Performance:")
         print(colored(f"Total Trading Volume: {self.calculator.total_volume:.8f} BTC", "cyan"))
         print(colored(f"Total Trading Fees: {self.calculator.total_fees:.2f} MYR", "yellow"))
         print(colored(f"Total Profit: {self.total_profit:.2f} MYR", "green"))
