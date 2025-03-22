@@ -1,14 +1,14 @@
 {
     "technical_analysis": {
-        "ma_short_period": 20,
-        "ma_long_period": 50,
+        "ma_short_period": 10,
+        "ma_long_period": 55,
         "rsi_period": 14,
         "rsi_oversold": 30,
         "rsi_overbought": 70
     },
     "risk_management": {
-        "max_daily_loss": 5.0,
-        "max_position_size": 50.0,
-        "min_profit_target": 1.0
+        "max_daily_loss": 2.0,
+        "max_position_size": 25.0,
+        "min_profit_target": 0.5
     }
 }
