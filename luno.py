@@ -70,7 +70,8 @@ def get_order_book(pair=DEFAULT_PAIR):
 
 def list_trades(pair=DEFAULT_PAIR, since=None):
     if since is None:
-        since = int((datetime.now() - timedelta(hours=24)).timestamp())
+        # Set default to current UTC time in milliseconds
+        since = int(datetime.utcnow().timestamp() * 1000)
     try:
         res = client.list_trades(pair, since)
         trades = res.get('trades', [])
@@ -81,6 +82,7 @@ def list_trades(pair=DEFAULT_PAIR, since=None):
         print(tabulate(table, headers, tablefmt="pretty"))
     except Exception as e:
         print(f"Error listing trades: {e}")
+        print("Note: Luno API only allows fetching trades from the last 24 hours")
     time.sleep(0.5)
 
 def get_candles(pair=DEFAULT_PAIR, since=DEFAULT_TIMESTAMP, duration=3600):
@@ -300,7 +302,9 @@ def main():
             get_order_book(pair)
         elif choice == '4':
             pair = input(f"Enter pair (default: {DEFAULT_PAIR}): ") or DEFAULT_PAIR
-            since = get_valid_timestamp("Enter timestamp (default: 1740312918074): ", 1740312918074)
+            # Calculate a default timestamp using current UTC time in milliseconds
+            default_timestamp = int(datetime.utcnow().timestamp() * 1000)
+            since = get_valid_timestamp(f"Enter timestamp in milliseconds (default: {default_timestamp} - current UTC time): ", default_timestamp)
             list_trades(pair, since)
         elif choice == '5':
             pair = input(f"Enter pair (default: {DEFAULT_PAIR}): ") or DEFAULT_PAIR
